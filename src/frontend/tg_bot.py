@@ -1,8 +1,8 @@
 import nest_asyncio
 import os
 import sys
-# from dotenv import load_dotenv
-# load_dotenv()
+from dotenv import load_dotenv
+load_dotenv()
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
@@ -19,8 +19,7 @@ import re
 SCRIPT_DIR = os.path.dirname(Path(__file__).parent)
 
 sys.path.append(os.path.dirname(SCRIPT_DIR))
-# from src.backend.search import SearchCourses
-# import src.backend.search as search
+from src.backend.vacancies.services import analyzer
 from src.backend._tesseract import pdf_parser
 
 nest_asyncio.apply()

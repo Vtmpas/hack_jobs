@@ -1,0 +1,3 @@
+recsys:
+  vector_encoder: "intfloat/multilingual-e5-base"
+  reranker: "BAAI/bge-reranker-v2-m3"

@@ -1,0 +1,26 @@
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Depends
+from fastapi.responses import Response
+
+from src.backend.vacancies.container import Container
+from src.backend.vacancies.schemas import NodeOutputs, Inputs
+
+router = APIRouter(prefix='/vacancies', tags=['vacancies'])
+
+
+@router.get('/health')
+def health():
+    return Response(content='OK')
+
+
+@router.post(
+    path='/recommend',
+    response_model=NodeOutputs,
+    description='Run models to get relevant course recommendations',
+)
+@inject
+def predict(
+        description: Inputs,
+        analyzer=Depends(Provide[Container.analyzer]),
+) -> NodeOutputs:
+    return NodeOutputs(recommendations=analyzer.get_vacancies_by_desc(description))

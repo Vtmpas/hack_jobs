@@ -1,9 +1,26 @@
-from typing import List
+from typing import List, Optional
 
+from math import exp
 import pandas as pd
 
-from llama_index.core import Document
+from llama_index.core import Document, QueryBundle
 from llama_index.core.retrievers import BaseRetriever
+from llama_index.core.postprocessor.types import BaseNodePostprocessor
+from llama_index.core.schema import NodeWithScore
+
+
+class ProbaNodePostprocessor(BaseNodePostprocessor):
+    def _postprocess_nodes(
+            self, nodes: List[NodeWithScore], query_bundle: Optional[QueryBundle]
+    ) -> List[NodeWithScore]:
+        # First, compute the sum of exponentials of the scores
+        sum_exp_scores = sum(exp(node.score) for node in nodes)
+
+        # Apply the softmax function to each score
+        for node in nodes:
+            node.score = exp(node.score) / sum_exp_scores
+
+        return nodes
 
 
 class HybridRetriever(BaseRetriever):
@@ -53,6 +70,7 @@ def create_document(row: pd.Series = None,
         text=row[text_col],
         metadata=row.loc[['Название профессии',
                           'Стек технологий',
+                          'Ссылка на курс', 'Описание курса',
                           'Период обучения', 'spec_idx']].to_dict(),
         excluded_llm_metadata_keys=exclude_cols,
         metadata_seperator="::",
@@ -68,3 +86,13 @@ def extract_names(json_obj, field_name):
     except Exception as e:
         print(e)
         return []
+
+
+def post_process_metadata(node):
+    result = {}
+    for k, v in node.node.metadata.items():
+        if k in ['Ссылка на курс', 'Название профессии', 'Описание курса']:
+            result[str(k)] = str(v)
+
+    result['Match probability'] = str(node.score * 100) + '%'
+    return result
