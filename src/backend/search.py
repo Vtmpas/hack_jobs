@@ -2,6 +2,7 @@ from llama_index.retrievers.bm25 import BM25Retriever
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.core import Settings, QueryBundle, StorageContext, VectorStoreIndex
 from llama_index.core.postprocessor import SentenceTransformerRerank
+from llama_index.core.schema import MetadataMode
 
 from _utils import create_document, HybridRetriever
 
@@ -20,8 +21,11 @@ Settings.embed_model = HuggingFaceEmbedding(
     model_name="intfloat/multilingual-e5-base",
     trust_remote_code=True
 )
+Settings.chunk_size = 16196
+Settings.chunk_overlap = 0
 
-reranker = SentenceTransformerRerank(top_n=4, model="BAAI/bge-reranker-v2-m3")
+
+reranker = SentenceTransformerRerank(top_n=5, model="BAAI/bge-reranker-v2-m3")
 
 
 def build_storage():
@@ -35,7 +39,7 @@ def build_storage():
 
 
 def build_retriver(docs, strg):
-    bm25_retriever = BM25Retriever.from_defaults(docstore=strg.docstore, similarity_top_k=2)
+    bm25_retriever = BM25Retriever.from_defaults(docstore=strg.docstore, similarity_top_k=10)
 
     index = VectorStoreIndex.from_documents(docs)
     vector_retriever = index.as_retriever(similarity_top_k=10)
@@ -91,3 +95,6 @@ PostgresSQL / MS SQL-server,
     print("=" * 100)
     for node in reranked_nodes:
         print(node)
+
+    print("=" * 100)
+    print(reranked_nodes[0].get_content(metadata_mode=MetadataMode.EMBED))
