@@ -4,7 +4,7 @@ from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core.schema import MetadataMode
 from llama_index.retrievers.bm25 import BM25Retriever
 
-from _utils import create_document, HybridRetriever
+from ._utils import create_document, HybridRetriever
 
 import logging
 import sys
