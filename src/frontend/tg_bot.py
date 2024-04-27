@@ -1,6 +1,8 @@
 import nest_asyncio
 import os
 import sys
+from dotenv import load_dotenv
+load_dotenv()
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
