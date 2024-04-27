@@ -21,8 +21,8 @@ from src.backend import search
 nest_asyncio.apply()
 sys.path.append(str(Path(__file__).parent))
 
-TOKEN = os.environ.get('TG_TOKEN')
-print("TOKEN")
+TOKEN = os.environ['TG_TOKEN']
+print(TOKEN)
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
