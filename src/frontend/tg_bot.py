@@ -1,6 +1,5 @@
 import nest_asyncio
 import os
-import sys
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -16,7 +15,7 @@ import asyncio
 SCRIPT_DIR = os.path.dirname(Path(__file__).parent)
 
 sys.path.append(os.path.dirname(SCRIPT_DIR))
-from src.backend import search
+from src.backend.vacancies.services import analyzer
 
 nest_asyncio.apply()
 sys.path.append(str(Path(__file__).parent))
