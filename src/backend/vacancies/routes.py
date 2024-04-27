@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import Response
 
 from src.backend.vacancies.container import Container
-from src.backend.vacancies.schemas import NodeOutputs
+from src.backend.vacancies.schemas import NodeOutputs, Inputs
 
 router = APIRouter(prefix='/vacancies', tags=['vacancies'])
 
@@ -20,7 +20,7 @@ def health():
 )
 @inject
 def predict(
-        description: str,
+        description: Inputs,
         analyzer=Depends(Provide[Container.analyzer]),
 ) -> NodeOutputs:
     return NodeOutputs(recommendations=analyzer.get_vacancies_by_desc(description))
