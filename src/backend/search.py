@@ -4,7 +4,7 @@ from llama_index.core import Settings, QueryBundle, StorageContext, VectorStoreI
 from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core.schema import MetadataMode
 
-from _utils import create_document, HybridRetriever
+from ._utils import create_document, HybridRetriever
 
 import logging
 import sys
