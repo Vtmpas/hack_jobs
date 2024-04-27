@@ -4,7 +4,7 @@ from llama_index.core.postprocessor import SentenceTransformerRerank
 from llama_index.core.schema import MetadataMode
 from llama_index.retrievers.bm25 import BM25Retriever
 
-from ._utils import create_document, HybridRetriever
+from _utils import create_document, HybridRetriever
 
 import logging
 import sys
@@ -129,10 +129,15 @@ class SearchCourses:
             url = 'http://' + url
 
         if not self._check_is_url(url):
-             raise ValueError("not correct url")
+             raise ValueError("Not correct vacancy url")
+
+        if 'hh.ru/vacancy/' not in url:
+            raise ValueError("Not correct vacancy url")
 
         url_parse = urlparse(url)
         vacancy_id = url_parse.path.split('/')[-1]
+        print('vacancy_id =', vacancy_id)
+        
             
         try:
             x = requests.get(f'https://api.hh.ru/vacancies/{vacancy_id}').json()
@@ -179,9 +184,15 @@ class SearchCourses:
         """
         vacancy_info = self._vacancy_info_by_url(url)
         vacancy_description = vacancy_info["description"]
+
+        if vacancy_description is None:
+            raise ValueError("Not correct vacancy page")
+
+        print("=" * 100)
+        print(vacancy_description)
+        print("=" * 100)
+        
         self.get_vacancies_by_desc(vacancy_description)
-
-
 
 if __name__ == "__main__":
     search = SearchCourses()
