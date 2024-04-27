@@ -20,9 +20,9 @@ class HybridRetriever(BaseRetriever):
         all_nodes = []
         node_ids = set()
         for n in bm25_nodes + vector_nodes:
-            if n.node.node_id not in node_ids:
+            if n.node.metadata['spec_idx'] not in node_ids:
                 all_nodes.append(n)
-                node_ids.add(n.node.node_id)
+                node_ids.add(n.node.metadata['spec_idx'])
         return all_nodes
 
 
@@ -40,15 +40,20 @@ def preprocess_row(row: pd.Series) -> pd.Series:
 
 def create_document(row: pd.Series = None,
                     text_col: str = 'full_text',
-                    exclude_cols: List[str] = ['Ссылка на курс']
+                    exclude_cols: List[str] = None
                     ) -> Document:
+    if exclude_cols is None:
+        exclude_cols = ['Ссылка на курс', 'spec_idx']
+
     row = preprocess_row(row)
+
+    row['spec_idx'] = hash(row['Название профессии'] + str(row['Период обучения']) + row['Стек технологий'])
 
     document = Document(
         text=row[text_col],
         metadata=row.loc[['Название профессии',
                           'Стек технологий',
-                          'Период обучения']].to_dict(),
+                          'Период обучения', 'spec_idx']].to_dict(),
         excluded_llm_metadata_keys=exclude_cols,
         metadata_seperator="::",
         metadata_template="{key}=>{value}",
