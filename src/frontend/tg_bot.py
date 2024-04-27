@@ -1,5 +1,6 @@
 import nest_asyncio
 import os
+import sys
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
@@ -8,9 +9,12 @@ import aiohttp
 from bs4 import BeautifulSoup
 import sys
 from pathlib import Path
-
-from src.backend import search
 import asyncio
+
+SCRIPT_DIR = os.path.dirname(Path(__file__).parent)
+
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+from src.backend import search
 
 nest_asyncio.apply()
 sys.path.append(str(Path(__file__).parent))
