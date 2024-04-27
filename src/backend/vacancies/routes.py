@@ -23,4 +23,4 @@ def predict(
         description: str,
         analyzer=Depends(Provide[Container.analyzer]),
 ) -> NodeOutputs:
-    return NodeOutputs(big_string=analyzer.get_vacancies_by_desc(description))
+    return NodeOutputs(recommendations=analyzer.get_vacancies_by_desc(description))
