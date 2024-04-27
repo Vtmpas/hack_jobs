@@ -60,3 +60,11 @@ def create_document(row: pd.Series = None,
         text_template="Metadata: {metadata_str}\n-----\nContent: {content}",
     )
     return document
+
+
+def extract_names(json_obj, field_name):
+    try:
+        return [val['name'] for val in json_obj[field_name]]
+    except Exception as e:
+        print(e)
+        return []
