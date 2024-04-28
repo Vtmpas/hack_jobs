@@ -180,11 +180,11 @@ async def echo_message(msg: types.Message):
                 new_file.write(downloaded_file.getvalue())
             description = pdf_parser("vacancy.pdf")
             await bot.send_message(msg.from_user.id, 'Уже изучил описание вакансии. Еще совсем немного ...')
-            recommendations_raw = eval(post(url=URL, json={'description':description}).text)['recommendations']
-            await send_recommendations(msg, vacancy_data, description, recommendations_raw)
-            # await bot.send_message(msg.from_user.id, prettify_recommendations(eval(post(url=URL,
-            #                                               json={'description':description}).text)['recommendations'])
-            #                        )
+            # recommendations_raw = eval(post(url=URL, json={'description':description}).text)['recommendations']
+            # await send_recommendations(msg, vacancy_data, description, recommendations_raw)
+            await bot.send_message(msg.from_user.id, prettify_recommendations(eval(post(url=URL,
+                                                          json={'description':description}).text)['recommendations'])
+                                   )
         except Exception as e:
             await bot.send_message(msg.from_user.id, 'Рекомендуем курс по внедрению ИИ')
 
@@ -211,12 +211,12 @@ async def echo_message(msg: types.Message):
     else:
         description = msg.text.strip()
         await bot.send_message(msg.from_user.id, 'Уже изучил описание вакансии. Еще совсем немного ...')
-        recommendations_raw = eval(post(url=URL, json={'description':description}).text)['recommendations']
-        await send_recommendations(msg, vacancy_data, description, recommendations_raw)
-        # await bot.send_message(msg.from_user.id, prettify_recommendations(eval(post(url=URL,
-        #                                               json={'description':description}
-        #                                               ).text)['recommendations'])
-        #                        )
+        # recommendations_raw = eval(post(url=URL, json={'description':description}).text)['recommendations']
+        # await send_recommendations(msg, vacancy_data, description, recommendations_raw)
+        await bot.send_message(msg.from_user.id, prettify_recommendations(eval(post(url=URL,
+                                                      json={'description':description}
+                                                      ).text)['recommendations'])
+                               )
     await bot.send_message(msg.from_user.id, "Оцените рекомендации", reply_markup=keyboard)
 
 
