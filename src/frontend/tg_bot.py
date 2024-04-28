@@ -138,8 +138,8 @@ async def echo_message(msg: types.Message):
             with open('vacancy.pdf', 'wb') as new_file:
                 new_file.write(downloaded_file.getvalue())
             description = pdf_parser("vacancy.pdf")
-            await bot.send_message(msg.from_user.id, prettify_recommendations(post(url=URL,
-                                                          json={'description':description}).text['recommendations'])
+            await bot.send_message(msg.from_user.id, prettify_recommendations(eval(post(url=URL,
+                                                          json={'description':description}).text)['recommendations'])
                                    )
         except Exception as e:
             await bot.send_message(msg.from_user.id, 'Рекомендуем курс по внедрению ИИ')
@@ -158,8 +158,8 @@ async def echo_message(msg: types.Message):
                 vacancy_data = await get_vacancy_data(vacancy_id)
                 description = vacancy_data["description"]
                 await bot.send_message(msg.from_user.id,
-                                       prettify_recommendations(post(url=URL,
-                                            json={'description':description}).text['recommendations']
+                                       prettify_recommendations(eval(post(url=URL,
+                                            json={'description':description}).text)['recommendations']
                                        ))
             except Exception as e:
                 await bot.send_message(msg.from_user.id, 'Рекомендуем курс по внедрению ИИ')
@@ -167,9 +167,9 @@ async def echo_message(msg: types.Message):
 
     else:
         description = msg.text.strip()
-        await bot.send_message(msg.from_user.id, prettify_recommendations(post(url=URL,
+        await bot.send_message(msg.from_user.id, prettify_recommendations(eval(post(url=URL,
                                                       json={'description':description}
-                                                      ).text['recommendations'])
+                                                      ).text)['recommendations'])
                                )
     await bot.send_message(msg.from_user.id, "Оцените рекомендации", reply_markup=keyboard)
 
