@@ -94,5 +94,5 @@ def post_process_metadata(node):
         if k in ['Ссылка на курс', 'Название профессии', 'Описание курса']:
             result[str(k)] = str(v)
 
-    result['Match probability'] = str(min(node.score + 0.3, 1) * 100) + '%'
+    result['Match probability'] = str(min(round(node.score, 2) + 0.3, 1) * 100) + '%'
     return result
