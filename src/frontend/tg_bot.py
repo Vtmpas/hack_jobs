@@ -1,7 +1,8 @@
-import nest_asyncio
 import os
-import sys
+
+import nest_asyncio
 from dotenv import load_dotenv
+
 load_dotenv()
 
 from aiogram import Bot, Dispatcher, types
@@ -9,6 +10,7 @@ from aiogram.filters.command import Command
 from urllib.parse import urlparse
 import aiohttp
 from bs4 import BeautifulSoup
+from requests import post
 import sys
 from pathlib import Path
 import asyncio
@@ -19,7 +21,6 @@ import re
 SCRIPT_DIR = os.path.dirname(Path(__file__).parent)
 
 sys.path.append(os.path.dirname(SCRIPT_DIR))
-from src.backend.vacancies.services import analyzer
 from src.backend._tesseract import pdf_parser
 
 nest_asyncio.apply()
@@ -29,6 +30,8 @@ TOKEN = os.environ['TG_TOKEN']
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
+
+URL = 'http://0.0.0.0:8000/vacancies/recommend'
 
 # search_courses = SearchCourses()
 # documents = search_courses.documents
@@ -127,7 +130,7 @@ async def echo_message(msg: types.Message):
             with open('vacancy.pdf', 'wb') as new_file:
                 new_file.write(downloaded_file.getvalue())
             description = pdf_parser("vacancy.pdf")
-            await bot.send_message(msg.from_user.id, description[:2000])
+            await bot.send_message(msg.from_user.id, post(url=URL, json={'description':description}))
         except Exception as e:
             await bot.send_message(msg.from_user.id, 'Рекомендуем курс по внедрению ИИ')
 
@@ -144,14 +147,14 @@ async def echo_message(msg: types.Message):
                 vacancy_id = Path(parseresult.path).name
                 vacancy_data = await get_vacancy_data(vacancy_id)
                 description = vacancy_data["description"]
-                await bot.send_message(msg.from_user.id, description)
+                await bot.send_message(msg.from_user.id, post(url=URL, json={'description':description}))
             except Exception as e:
                 await bot.send_message(msg.from_user.id, 'Рекомендуем курс по внедрению ИИ')
 
 
     else:
         description = msg.text.strip()
-        await bot.send_message(msg.from_user.id, description)
+        await bot.send_message(msg.from_user.id, post(url=URL, json={'description':description}))
     await bot.send_message(msg.from_user.id, "Оцените рекомендации", reply_markup=keyboard)
 
 
