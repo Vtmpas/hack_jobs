@@ -50,7 +50,7 @@ keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb, one_time_keyboard=True
 
 def prettify_recommendations(data):
     message = "Вот Ваши метчи:\n"
-    for item in data["recommendations"]:
+    for item in data:
         message += f"\n🎓 Профессия: {item['Название профессии']}\n"
         message += f"🔗 [Course Link]({item['Ссылка на курс']})\n"
         message += f"📄 Описание: {item['Описание курса']}\n"
