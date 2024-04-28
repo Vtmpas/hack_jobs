@@ -52,8 +52,9 @@ def prettify_recommendations(data):
     for item in data:
         message += f"\n🎓 Профессия: {item['Название профессии']}\n"
         message += f"🔗 [Course Link]({item['Ссылка на курс']})\n"
-        message += f"📄 Описание: {item['Описание курса']}\n"
+        message += f"📄 Описание: {item['Описание курса']}\n".strip()
         message += f"🎯 Шанс метча: {item['Match probability']}\n"
+        message += f"🤓 Формат обучения: онлайн\n"
     return message.strip()
 
 def prettify_recommendation(dict_obj):
