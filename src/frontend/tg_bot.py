@@ -45,7 +45,7 @@ kb = [
 ]
 keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb, one_time_keyboard=True)
 
-markup_final = pd.read_excel(Path(__file__).parents[2] / 'backend' / 'tmp_data' / 'GeekBrains.xlsx')
+markup_final = pd.read_excel(Path(__file__).parents[2] / 'src' / 'backend' / 'tmp_data' / 'GeekBrains.xlsx')
 
 def prettify_recommendations(data):
     message = "Вот Ваши метчи:\n"
