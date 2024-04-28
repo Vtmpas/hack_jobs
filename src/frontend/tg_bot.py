@@ -1,14 +1,15 @@
-import nest_asyncio
 import os
-import sys
-# from dotenv import load_dotenv
-# load_dotenv()
+import nest_asyncio
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
 from urllib.parse import urlparse
 import aiohttp
 from bs4 import BeautifulSoup
+from requests import post
 import sys
 from pathlib import Path
 import asyncio
@@ -26,19 +27,13 @@ from src.backend._tesseract import pdf_parser
 nest_asyncio.apply()
 sys.path.append(str(Path(__file__).parent))
 
-# TOKEN = os.environ['TG_TOKEN']
-TOKEN = "6961177831:AAGcVN-a-4xA9dgQcF-n5FXo8U8_8pzXoDk"
+TOKEN = os.environ['TG_TOKEN']
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
+URL = 'http://0.0.0.0:8000/vacancies/recommend'
 
-rslt_markup = pd.read_excel("GeekBrains_fin.xlsx")
-
-# search_courses = SearchCourses()
-# documents = search_courses.documents
-# storage = search_courses.storage
-# retiriver = search_courses._build_retriver(documents, storage)
 
 button_like = types.InlineKeyboardButton(text="👍", callback_data="send_like")
 button_dislike = types.InlineKeyboardButton(text="👎", callback_data="send_dislike")
@@ -50,6 +45,24 @@ kb = [
 ]
 keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb, one_time_keyboard=True)
 
+markup_final = pd.read_excel("GeekBrains_fin.xlsx")
+
+def prettify_recommendations(data):
+    message = "Вот Ваши метчи:\n"
+    for item in data:
+        message += f"\n🎓 Профессия: {item['Название профессии']}\n"
+        message += f"🔗 [Course Link]({item['Ссылка на курс']})\n"
+        message += f"📄 Описание: {item['Описание курса']}\n"
+        message += f"🎯 Шанс метча: {item['Match probability']}\n"
+    return message.strip()
+
+def prettify_recommendation(dict_obj):
+    message = ""
+    message += f"\n🎓 Профессия: {dict_obj['Название профессии']}\n"
+    message += f"🔗 [Course Link]({dict_obj['Ссылка на курс']})\n"
+    message += f"📄 Описание: {dict_obj['Описание курса']}\n"
+    message += f"🎯 Шанс метча: {dict_obj['Match probability']}\n"
+    return message.strip()
 
 @dp.callback_query(F.data == "send_like")
 async def reply_on_like(callback: types.CallbackQuery):
@@ -123,6 +136,34 @@ def _check_is_url(request: str):
 
         return re.match(regex, request) is not None
 
+async def send_recommendations(msg: types.Message, vacancy_data, description, recommendations_raw):
+    await bot.send_message(msg.from_user.id, "Вот Ваши метчи:")
+    for rec_item in recommendations_raw:
+        await bot.send_message(msg.from_user.id, prettify_recommendation(rec_item))
+
+        skills_from_vac = vacancy_data['key_skills']
+        course_url = rec_item['Ссылка на курс']
+        all_skills_str = markup_final[markup_final['Ссылка на курс'] == course_url]['Стек технологий'].values[0].lower()
+        matched_skills = []
+        unmatched_skills = []
+        for vac_skill in skills_from_vac:
+            if all_skills_str.find(vac_skill.lower()) != -1 or description.lower().find(vac_skill.lower()) != -1:
+                matched_skills.append(vac_skill)
+            else:
+                unmatched_skills.append(vac_skill)
+        matched_skills = sorted(matched_skills)
+        unmatched_skills = sorted(unmatched_skills)
+
+        if len(matched_skills) > 0:
+            if len(matched_skills) / len(skills_from_vac) > 0.5:
+                base_info = "Курс покрывает большинство требований вакансии\n\n"
+            else:
+                base_info = "Курс покрывает только часть требований вакансии\n\n"
+            coverage_info = base_info + "✅ " + ",".join(matched_skills)
+            if len(matched_skills) > 0:
+                coverage_info += "\n\n" + "❌ " + ",".join(unmatched_skills)
+                await bot.send_message(msg.from_user.id, coverage_info)
+
 
 @dp.message() # lambda msg: hh_link_filter(msg.text))
 async def echo_message(msg: types.Message):
@@ -138,7 +179,11 @@ async def echo_message(msg: types.Message):
                 new_file.write(downloaded_file.getvalue())
             description = pdf_parser("vacancy.pdf")
             await bot.send_message(msg.from_user.id, 'Уже изучил описание вакансии. Еще совсем немного ...')
-            await bot.send_message(msg.from_user.id, description[:2000])
+            recommendations_raw = eval(post(url=URL, json={'description':description}).text)['recommendations']
+            await send_recommendations(msg, vacancy_data, description, recommendations_raw)
+            # await bot.send_message(msg.from_user.id, prettify_recommendations(eval(post(url=URL,
+            #                                               json={'description':description}).text)['recommendations'])
+            #                        )
         except Exception as e:
             await bot.send_message(msg.from_user.id, 'Рекомендуем курс по внедрению ИИ')
 
@@ -149,14 +194,15 @@ async def echo_message(msg: types.Message):
         if not hh_link_filter(url):
             await bot.send_message(msg.from_user.id, 'Обрабатываем только ссылки на hh')
         else:
-
             try:
                 parseresult = urlparse(url)
                 vacancy_id = Path(parseresult.path).name
                 vacancy_data = await get_vacancy_data(vacancy_id)
                 description = vacancy_data["description"]
                 await bot.send_message(msg.from_user.id, 'Уже изучил описание вакансии. Еще совсем немного ...')
-                await bot.send_message(msg.from_user.id, description)
+                recommendations_raw = eval(post(url=URL, json={'description':description}).text)['recommendations']
+                await send_recommendations(msg, vacancy_data, description, recommendations_raw)
+
             except Exception as e:
                 await bot.send_message(msg.from_user.id, 'Рекомендуем курс по внедрению ИИ')
 
@@ -164,44 +210,13 @@ async def echo_message(msg: types.Message):
     else:
         description = msg.text.strip()
         await bot.send_message(msg.from_user.id, 'Уже изучил описание вакансии. Еще совсем немного ...')
-        await bot.send_message(msg.from_user.id, description)
+        recommendations_raw = eval(post(url=URL, json={'description':description}).text)['recommendations']
+        await send_recommendations(msg, vacancy_data, description, recommendations_raw)
+        # await bot.send_message(msg.from_user.id, prettify_recommendations(eval(post(url=URL,
+        #                                               json={'description':description}
+        #                                               ).text)['recommendations'])
+        #                        )
     await bot.send_message(msg.from_user.id, "Оцените рекомендации", reply_markup=keyboard)
-
-
-# @dp.message()  # lambda msg: hh_link_filter(msg.text))
-# async def echo_message(msg: types.Message):
-#     url = msg.text.strip()
-#     parseresult = urlparse(url)
-#     vacancy_id = Path(parseresult.path).name
-#     print(0)
-#     vacancy_data = await get_vacancy_data(vacancy_id)
-
-#     await bot.send_message(msg.from_user.id, str(vacancy_data))
-#     await bot.send_message(msg.from_user.id, "Оцените рекомендации", reply_markup=keyboard)
-
-    # description = vacancy_data["description"]
-
-    # print(1)
-    # is_retrived = retiriver.retrieve(description)
-    # print(2)
-
-    # reranked_nodes = search_courses.reranker.postprocess_nodes(
-    #     is_retrived,
-    #     query_bundle=search.QueryBundle(
-    #         description
-    #     ),
-    # )
-    # print(3)
-
-    # for i in range(4):
-    #     node = reranked_nodes[i]
-    #     answer = ""
-    #     for key, value in node.metadata.items():
-    #         answer += f"{key}: {value}\n"
-
-    #     answer += "\n\n" + node.text
-    #     await bot.send_message(msg.from_user.id, answer[:4000])
-
 
 
 @dp.message(lambda msg: not hh_link_filter(msg.text)) # noqa
