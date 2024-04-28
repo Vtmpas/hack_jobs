@@ -1,8 +1,8 @@
 import nest_asyncio
 import os
 import sys
-from dotenv import load_dotenv
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters.command import Command
@@ -13,22 +13,27 @@ import sys
 from pathlib import Path
 import asyncio
 
+import pandas as pd
+
 from aiogram import F
 import re
 
 SCRIPT_DIR = os.path.dirname(Path(__file__).parent)
 
 sys.path.append(os.path.dirname(SCRIPT_DIR))
-from src.backend.vacancies.services import analyzer
 from src.backend._tesseract import pdf_parser
 
 nest_asyncio.apply()
 sys.path.append(str(Path(__file__).parent))
 
-TOKEN = os.environ['TG_TOKEN']
+# TOKEN = os.environ['TG_TOKEN']
+TOKEN = "6961177831:AAGcVN-a-4xA9dgQcF-n5FXo8U8_8pzXoDk"
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
+
+
+rslt_markup = pd.read_excel("GeekBrains_fin.xlsx")
 
 # search_courses = SearchCourses()
 # documents = search_courses.documents
@@ -59,10 +64,15 @@ async def reply_on_dislike(callback: types.CallbackQuery):
 
 @dp.message(Command('start'))
 async def process_start_command(message: types.Message):
+    start_message = (
+        "Привет! Я бот, который поможет тебе подобрать курсы от GeekBrains, "
+        "наиболее подходящие для той вакансии, которую ты рассматриваешь. 🎓\n\n"
+        "Ты можешь отправить мне ссылку на интересующую тебя вакансию с сайта hh.ru, "
+        "PDF-файл с описанием вакансии или просто текстовое описание должности. "
+        "На основе предоставленной информации я предложу курсы, которые помогут тебе стать идеальным кандидатом для этой работы. 💼"
+    )
 
-    await message.answer(
-        "Привет! Это бот для подбора курсов под вакансию. Отправь ссылку на вакансию на hh.ru и бот подберёт тебе \
-         подходящие курсы.")
+    await message.answer(start_message)
 
 
 def extract_names(json_obj, field_name):
@@ -127,6 +137,7 @@ async def echo_message(msg: types.Message):
             with open('vacancy.pdf', 'wb') as new_file:
                 new_file.write(downloaded_file.getvalue())
             description = pdf_parser("vacancy.pdf")
+            await bot.send_message(msg.from_user.id, 'Уже изучил описание вакансии. Еще совсем немного ...')
             await bot.send_message(msg.from_user.id, description[:2000])
         except Exception as e:
             await bot.send_message(msg.from_user.id, 'Рекомендуем курс по внедрению ИИ')
@@ -144,6 +155,7 @@ async def echo_message(msg: types.Message):
                 vacancy_id = Path(parseresult.path).name
                 vacancy_data = await get_vacancy_data(vacancy_id)
                 description = vacancy_data["description"]
+                await bot.send_message(msg.from_user.id, 'Уже изучил описание вакансии. Еще совсем немного ...')
                 await bot.send_message(msg.from_user.id, description)
             except Exception as e:
                 await bot.send_message(msg.from_user.id, 'Рекомендуем курс по внедрению ИИ')
@@ -151,6 +163,7 @@ async def echo_message(msg: types.Message):
 
     else:
         description = msg.text.strip()
+        await bot.send_message(msg.from_user.id, 'Уже изучил описание вакансии. Еще совсем немного ...')
         await bot.send_message(msg.from_user.id, description)
     await bot.send_message(msg.from_user.id, "Оцените рекомендации", reply_markup=keyboard)
 
