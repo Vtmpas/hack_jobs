@@ -55,7 +55,7 @@ def prettify_recommendations(data):
         message += f"🔗 [Course Link]({item['Ссылка на курс']})\n"
         message += f"📄 Описание: {item['Описание курса']}\n"
         message += f"🎯 Шанс метча: {item['Match probability']}\n"
-    return message
+    return message.strip()
 
 @dp.callback_query(F.data == "send_like")
 async def reply_on_like(callback: types.CallbackQuery):
