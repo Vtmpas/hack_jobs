@@ -48,6 +48,14 @@ kb = [
 ]
 keyboard = types.InlineKeyboardMarkup(inline_keyboard=kb, one_time_keyboard=True)
 
+def prettify_recommendations(data):
+    message = "Вот Ваши метчи:\n"
+    for item in data["recommendations"]:
+        message += f"\n🎓 Профессия: {item['Название профессии']}\n"
+        message += f"🔗 [Course Link]({item['Ссылка на курс']})\n"
+        message += f"📄 Описание: {item['Описание курса']}\n"
+        message += f"🎯 Шанс метча: {item['Match probability']}\n"
+    return message
 
 @dp.callback_query(F.data == "send_like")
 async def reply_on_like(callback: types.CallbackQuery):
@@ -130,7 +138,9 @@ async def echo_message(msg: types.Message):
             with open('vacancy.pdf', 'wb') as new_file:
                 new_file.write(downloaded_file.getvalue())
             description = pdf_parser("vacancy.pdf")
-            await bot.send_message(msg.from_user.id, post(url=URL, json={'description':description}).text)
+            await bot.send_message(msg.from_user.id, prettify_recommendations(post(url=URL,
+                                                          json={'description':description}).text['recommendations'])
+                                   )
         except Exception as e:
             await bot.send_message(msg.from_user.id, 'Рекомендуем курс по внедрению ИИ')
 
@@ -147,14 +157,20 @@ async def echo_message(msg: types.Message):
                 vacancy_id = Path(parseresult.path).name
                 vacancy_data = await get_vacancy_data(vacancy_id)
                 description = vacancy_data["description"]
-                await bot.send_message(msg.from_user.id, post(url=URL, json={'description':description}).text)
+                await bot.send_message(msg.from_user.id,
+                                       prettify_recommendations(post(url=URL,
+                                            json={'description':description}).text['recommendations']
+                                       ))
             except Exception as e:
                 await bot.send_message(msg.from_user.id, 'Рекомендуем курс по внедрению ИИ')
 
 
     else:
         description = msg.text.strip()
-        await bot.send_message(msg.from_user.id, post(url=URL, json={'description':description}).text)
+        await bot.send_message(msg.from_user.id, prettify_recommendations(post(url=URL,
+                                                      json={'description':description}
+                                                      ).text['recommendations'])
+                               )
     await bot.send_message(msg.from_user.id, "Оцените рекомендации", reply_markup=keyboard)
 
 
